@@ -19,20 +19,20 @@ function installTb() {
 
     loadDemo=$1
 
-    kubectl apply -f $DATABASE/tb-node-db-configmap.yml
+    microk8s kubectl apply -f $DATABASE/tb-node-db-configmap.yml
 
-    kubectl apply -f tb-node-configmap.yml
-    kubectl apply -f database-setup.yml &&
-    kubectl wait --for=condition=Ready pod/tb-db-setup --timeout=120s &&
-    kubectl exec tb-db-setup -- sh -c 'export INSTALL_TB=true; export LOAD_DEMO='"$loadDemo"'; start-tb-node.sh; touch /tmp/install-finished;'
+    microk8s kubectl apply -f tb-node-configmap.yml
+    microk8s kubectl apply -f database-setup.yml &&
+    microk8s kubectl wait --for=condition=Ready pod/tb-db-setup --timeout=120s &&
+    microk8s kubectl exec tb-db-setup -- sh -c 'export INSTALL_TB=true; export LOAD_DEMO='"$loadDemo"'; start-tb-node.sh; touch /tmp/install-finished;'
 
-    kubectl delete pod tb-db-setup
+    microk8s kubectl delete pod tb-db-setup
 
 }
 
 function installPostgres() {
-    kubectl apply -f postgres.yml
-    kubectl rollout status deployment/postgres
+    microk8s kubectl apply -f postgres.yml
+    microk8s kubectl rollout status deployment/postgres
 }
 
 function installCassandra() {
@@ -42,11 +42,11 @@ function installCassandra() {
         exit 1
     fi
 
-    kubectl apply -f cassandra.yml
+    microk8s kubectl apply -f cassandra.yml
 
-    kubectl rollout status statefulset/cassandra
+    microk8s kubectl rollout status statefulset/cassandra
 
-    kubectl exec -it cassandra-0 -- bash -c "cqlsh -u cassandra -p cassandra -e \
+    microk8s kubectl exec -it cassandra-0 -- bash -c "cqlsh -u cassandra -p cassandra -e \
                     \"CREATE KEYSPACE IF NOT EXISTS thingsboard \
                     WITH replication = { \
                         'class' : 'SimpleStrategy', \
@@ -78,8 +78,8 @@ fi
 
 source .env
 
-kubectl apply -f tb-namespace.yml || echo
-kubectl config set-context --current --namespace=thingsboard
+microk8s kubectl apply -f tb-namespace.yml || echo
+microk8s kubectl config set-context --current --namespace=thingsboard
 
 case $DATABASE in
         postgres)
